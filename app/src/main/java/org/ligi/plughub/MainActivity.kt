@@ -61,7 +61,7 @@ public class MainActivity : Activity() {
             client.setAuthenticator(auth())
 
             val request = Request.Builder()
-                    .url("http://${ipET!!.getText()}:10000/smartplug.cgi")
+                    .url("http://${ipET!!.getText()}:${portET!!.getText()}/smartplug.cgi")
                     .post(body)
                     .build();
 
