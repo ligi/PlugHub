@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.method.LinkMovementMethod
+import android.util.Log
 import android.widget.EditText
 import com.squareup.okhttp.*
 import org.jetbrains.anko.*
@@ -21,9 +22,6 @@ public class MainActivity : AppCompatActivity() {
 
     val pwdStr = "12345"
     var pwdET: EditText? = null
-
-    val CMD_ON = "<?xml version='1.0' encoding='UTF8'?><SMARTPLUG id='edimax'><CMD id='setup'><Device.System.Power.State>ON</Device.System.Power.State></CMD></SMARTPLUG>";
-    val CMD_OFF = "<?xml version='1.0' encoding='UTF8'?><SMARTPLUG id='edimax'><CMD id='setup'><Device.System.Power.State>OFF</Device.System.Power.State></CMD></SMARTPLUG>";
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,11 +44,13 @@ public class MainActivity : AppCompatActivity() {
 
             switchCompatSupport() {
                 onCheckedChange { compoundButton, b ->
-                    executeCommand(if (b) CMD_ON else CMD_OFF);
+                    executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF);
                 }
                 setText("Switch")
             }
         }.setPadding(dip(16), dip(16), dip(16), dip(16))
+
+        executeCommand(EdiMaxCommands.CMD_GET_STATE);
     }
 
     private fun executeCommand(cmd: String) {
@@ -66,7 +66,8 @@ public class MainActivity : AppCompatActivity() {
                     .post(body)
                     .build();
 
-            client.newCall(request).execute()
+            val response = client.newCall(request).execute()
+            Log.i("PlugHub",response.body().string())
         }).start()
     }
 
