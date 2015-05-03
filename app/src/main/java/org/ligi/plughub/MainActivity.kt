@@ -43,7 +43,7 @@ public class MainActivity : Activity() {
                 setText(pwdStr)
             }
 
-            switch() {
+            switchCompatSupport() {
                 onCheckedChange { compoundButton, b ->
                     executeCommand(if (b) CMD_ON else CMD_OFF);
                 }
