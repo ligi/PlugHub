@@ -16,18 +16,33 @@ public class EdiMaxCommands {
         }
 
         fun wrapPowerState(param: String): String {
-            return "<Device.System.Power.State>${param}</Device.System.Power.State>"
+            return Tag("Device.System.Power.State").wrap(param)
         }
 
-        private val POWER_STATE_TAG_START = "<Device.System.Power.State>"
-        private val POWER_STATE_TAG_END = "</Device.System.Power.State>"
-
-        public fun unwrapPowerState(param: String): String? {
-            val index = param.indexOf(POWER_STATE_TAG_START)
-            if (index<0) {
+        public fun unwrap(tag: String,param: String): String? {
+            val index = param.indexOf(Tag(tag).start())
+            if (index < 0) {
                 return null
             }
-            return param.subSequence(index+POWER_STATE_TAG_START.length(),param.indexOf(POWER_STATE_TAG_END)).toString()
+            return param.subSequence(index + Tag(tag).start().length(), param.indexOf( Tag(tag).end())).toString()
+        }
+
+        public fun unwrapPowerState(param: String): String? {
+            return unwrap("Device.System.Power.State",param)
+        }
+    }
+
+    class Tag(val tag: String) {
+        fun start(): String {
+            return "<${tag}>";
+        }
+
+        fun end(): String {
+            return "</${tag}>";
+        }
+
+        fun wrap(content: String): String {
+            return start() + content + end()
         }
     }
 }
