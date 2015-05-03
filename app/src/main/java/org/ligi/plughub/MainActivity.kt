@@ -2,6 +2,7 @@ package org.ligi.plughub
 
 import android.app.Activity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.text.method.LinkMovementMethod
 import android.widget.EditText
 import com.squareup.okhttp.*
@@ -9,7 +10,7 @@ import org.jetbrains.anko.*
 import java.net
 
 
-public class MainActivity : Activity() {
+public class MainActivity : AppCompatActivity() {
 
     val ipStr = "192.168.2.100"
     var ipET: EditText? = null
