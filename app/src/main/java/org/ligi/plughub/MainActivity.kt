@@ -1,10 +1,9 @@
 package org.ligi.plughub
 
-import android.app.Activity
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.SwitchCompat
 import android.text.method.LinkMovementMethod
-import android.util.Log
 import android.widget.EditText
 import com.squareup.okhttp.*
 import org.jetbrains.anko.*
@@ -22,6 +21,8 @@ public class MainActivity : AppCompatActivity() {
 
     val pwdStr = "12345"
     var pwdET: EditText? = null
+
+    var switch: SwitchCompat? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,18 +43,22 @@ public class MainActivity : AppCompatActivity() {
                 setText(pwdStr)
             }
 
-            switchCompatSupport() {
+            switch = switchCompatSupport() {
                 onCheckedChange { compoundButton, b ->
-                    executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF);
+                    executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF,{});
                 }
                 setText("Switch")
             }
         }.setPadding(dip(16), dip(16), dip(16), dip(16))
 
-        executeCommand(EdiMaxCommands.CMD_GET_STATE);
+        executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
+            runOnUiThread {
+                switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
+            }
+        });
     }
 
-    private fun executeCommand(cmd: String) {
+    private fun executeCommand(cmd: String, function: (param: String) -> Unit ) {
         Thread(Runnable {
             val body = RequestBody.create(null, cmd);
 
@@ -67,7 +72,7 @@ public class MainActivity : AppCompatActivity() {
                     .build();
 
             val response = client.newCall(request).execute()
-            Log.i("PlugHub",response.body().string())
+            function(response.body().string())
         }).start()
     }
 
