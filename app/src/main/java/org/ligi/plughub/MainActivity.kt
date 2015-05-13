@@ -28,14 +28,18 @@ public class MainActivity : AppCompatActivity() {
     private fun getDataCall() {
         comm.executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
             runOnUiThread {
-                switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
+                if (param != null) {
+                    switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
+                }
 
                 comm.executeCommand(EdiMaxCommands.CMD_GET_POWER, { response ->
                     runOnUiThread {
-                        powerState!!.setText(EdiMaxCommands.unwrapNowCurrent(response) + "A " + EdiMaxCommands.unwrapNowPower(response) + "W")
+                        if (response != null) {
+                            powerState!!.setText(EdiMaxCommands.unwrapNowCurrent(response) + "A " + EdiMaxCommands.unwrapNowPower(response) + "W")
+                        }
                         getDataCall()
                     }
-                });
+                })
             }
 
         })
@@ -69,7 +73,7 @@ public class MainActivity : AppCompatActivity() {
 
             switch = switchCompatSupport() {
                 onCheckedChange { compoundButton, b ->
-                    comm.executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF, {});
+                    comm.executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF, {})
                 }
                 setText("Switch")
             }

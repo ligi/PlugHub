@@ -7,7 +7,7 @@ public class EdiMaxCommunicator (cfg: EdiMaxConfig) {
 
     val cfg: EdiMaxConfig = cfg
 
-    public fun executeCommand(cmd: String, function: (param: String) -> Unit) {
+    public fun executeCommand(cmd: String, function: (param: String?) -> Unit) {
         Thread(Runnable {
             val body = RequestBody.create(null, cmd);
 
@@ -21,8 +21,13 @@ public class EdiMaxCommunicator (cfg: EdiMaxConfig) {
                     .post(body)
                     .build();
 
-            val response = client.newCall(request).execute()
-            function(response.body().string())
+            try {
+                val response = client.newCall(request).execute()
+                function(response.body().string())
+            } catch(e: Exception) {
+                function(null)
+            }
+
         }).start()
     }
 
