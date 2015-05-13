@@ -6,22 +6,13 @@ import android.support.v7.widget.SwitchCompat
 import android.text.method.LinkMovementMethod
 import android.widget.EditText
 import android.widget.TextView
-import com.squareup.okhttp.*
 import org.jetbrains.anko.*
-import java.net
 
 
 public class MainActivity : AppCompatActivity() {
 
-    val ipStr = "192.168.2.100"
-    var ipET: EditText? = null
-
-    val portStr = "10000"
-    var portET: EditText? = null
-
-
-    val pwdStr = "12345"
-    var pwdET: EditText? = null
+    val cfg = EdiMaxConfig()
+    val comm = EdiMaxCommunicator(cfg)
 
     var switch: SwitchCompat? = null
     var powerState: TextView? = null
@@ -35,13 +26,13 @@ public class MainActivity : AppCompatActivity() {
     }
 
     private fun getDataCall() {
-        executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
+        comm.executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
             runOnUiThread {
                 switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
 
-                executeCommand(EdiMaxCommands.CMD_GET_POWER, { response ->
+                comm.executeCommand(EdiMaxCommands.CMD_GET_POWER, { response ->
                     runOnUiThread {
-                        powerState!!.setText(EdiMaxCommands.unwrapNowCurrent(response) + "A "  + EdiMaxCommands.unwrapNowPower(response) + "W")
+                        powerState!!.setText(EdiMaxCommands.unwrapNowCurrent(response) + "A " + EdiMaxCommands.unwrapNowPower(response) + "W")
                         getDataCall()
                     }
                 });
@@ -54,22 +45,31 @@ public class MainActivity : AppCompatActivity() {
         verticalLayout() {
             textView("Only works with EdiMax plugs at the moment").setMovementMethod(LinkMovementMethod())
             linearLayout {
-                ipET = editText {
-                    setText(ipStr)
+                editText {
+                    setText(cfg.host)
+                    extractText { text ->
+                        cfg.host = text
+                    }
                 }
                 textView(":")
-                portET = editText {
-                    setText(portStr)
+                editText {
+                    setText(cfg.port.toString())
+                    extractText { text ->
+                        cfg.port = Integer.valueOf(text)
+                    }
                 }
             }
 
-            pwdET = editText {
-                setText(pwdStr)
+            editText {
+                setText(cfg.pass)
+                extractText { text ->
+                    cfg.pass = text
+                }
             }
 
             switch = switchCompatSupport() {
                 onCheckedChange { compoundButton, b ->
-                    executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF, {});
+                    comm.executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF, {});
                 }
                 setText("Switch")
             }
@@ -77,34 +77,12 @@ public class MainActivity : AppCompatActivity() {
         }.setPadding(dip(16), dip(16), dip(16), dip(16))
     }
 
-    private fun executeCommand(cmd: String, function: (param: String) -> Unit) {
-        Thread(Runnable {
-            val body = RequestBody.create(null, cmd);
-
-            val client = OkHttpClient();
-
-            client.setAuthenticator(auth())
-
-            val request = Request.Builder()
-                    .url("http://${ipET!!.getText()}:${portET!!.getText()}/smartplug.cgi")
-                    .post(body)
-                    .build();
-
-            val response = client.newCall(request).execute()
-            function(response.body().string())
-        }).start()
-    }
-
-    inner class auth : Authenticator {
-        override fun authenticateProxy(proxy: net.Proxy?, response: Response?): Request? {
-            return null
+    private fun EditText.extractText(function: (param: String) -> Unit) {
+        textChangedListener {
+            onTextChanged { text, start, before, count ->
+                function(text.toString())
+            }
         }
-
-        override fun authenticate(proxy: net.Proxy?, response: Response?): Request? {
-            val credential = Credentials.basic("admin", pwdET!!.getText().toString());
-            return response?.request()?.newBuilder()?.header("Authorization", credential)?.build();
-        }
-
     }
 
 }
