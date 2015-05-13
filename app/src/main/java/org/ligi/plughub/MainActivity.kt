@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.SwitchCompat
 import android.text.method.LinkMovementMethod
 import android.widget.EditText
+import android.widget.TextView
 import com.squareup.okhttp.*
 import org.jetbrains.anko.*
 import java.net
@@ -23,6 +24,7 @@ public class MainActivity : AppCompatActivity() {
     var pwdET: EditText? = null
 
     var switch: SwitchCompat? = null
+    var powerState: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,20 +47,28 @@ public class MainActivity : AppCompatActivity() {
 
             switch = switchCompatSupport() {
                 onCheckedChange { compoundButton, b ->
-                    executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF,{});
+                    executeCommand(if (b) EdiMaxCommands.CMD_ON else EdiMaxCommands.CMD_OFF, {});
                 }
                 setText("Switch")
             }
+            powerState = textView()
         }.setPadding(dip(16), dip(16), dip(16), dip(16))
 
         executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
             runOnUiThread {
                 switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
+
+                executeCommand(EdiMaxCommands.CMD_GET_POWER, { param ->
+                    runOnUiThread {
+                        powerState!!.setText(param)
+                    }
+                });
             }
+
         });
     }
 
-    private fun executeCommand(cmd: String, function: (param: String) -> Unit ) {
+    private fun executeCommand(cmd: String, function: (param: String) -> Unit) {
         Thread(Runnable {
             val body = RequestBody.create(null, cmd);
 
