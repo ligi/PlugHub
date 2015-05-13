@@ -29,6 +29,28 @@ public class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        createUI()
+
+        getDataCall()
+    }
+
+    private fun getDataCall() {
+        executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
+            runOnUiThread {
+                switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
+
+                executeCommand(EdiMaxCommands.CMD_GET_POWER, { response ->
+                    runOnUiThread {
+                        powerState!!.setText(EdiMaxCommands.unwrapNowCurrent(response) + "A "  + EdiMaxCommands.unwrapNowPower(response) + "W")
+                        getDataCall()
+                    }
+                });
+            }
+
+        })
+    }
+
+    private fun createUI() {
         verticalLayout() {
             textView("Only works with EdiMax plugs at the moment").setMovementMethod(LinkMovementMethod())
             linearLayout {
@@ -53,19 +75,6 @@ public class MainActivity : AppCompatActivity() {
             }
             powerState = textView()
         }.setPadding(dip(16), dip(16), dip(16), dip(16))
-
-        executeCommand(EdiMaxCommands.CMD_GET_STATE, { param ->
-            runOnUiThread {
-                switch!!.setChecked((EdiMaxCommands.unwrapPowerState(param) == "ON"))
-
-                executeCommand(EdiMaxCommands.CMD_GET_POWER, { param ->
-                    runOnUiThread {
-                        powerState!!.setText(param)
-                    }
-                });
-            }
-
-        });
     }
 
     private fun executeCommand(cmd: String, function: (param: String) -> Unit) {

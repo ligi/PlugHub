@@ -30,6 +30,15 @@ public class EdiMaxCommands {
         public fun unwrapPowerState(param: String): String? {
             return unwrap("Device.System.Power.State",param)
         }
+
+        public fun unwrapNowCurrent(param: String): String? {
+            return unwrap("Device.System.Power.NowCurrent",param)
+        }
+
+
+        public fun unwrapNowPower(param: String): String? {
+            return unwrap("Device.System.Power.NowPower",param)
+        }
     }
 
     class Tag(val tag: String) {
